@@ -13,6 +13,7 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>          // include NTPClient library
 #include <TimeLib.h>            // include Arduino time library
+#include <WiFiManager.h>    
  
 // Libraries for internet weather
 #include <ESP8266HTTPClient.h>  // http web access library
@@ -56,18 +57,14 @@ void setup(void)
   display.setTextSize(1);
   display.display();
  
-  WiFi.begin(ssid, password);
- 
-  Serial.print("Connecting.");
-  display.setCursor(0, 24);
-  display.println("Connecting...");
-  display.display();
- 
-  while ( WiFi.status() != WL_CONNECTED )
-  {
-    delay(500);
-    Serial.print(".");
-  }
+  WiFiManager wifiManager;
+  //reset settings - for testing
+  wifiManager.autoConnect("My ESP");
+  Serial.println(WiFi.SSID());
+  Serial.println(WiFi.psk());
+  Serial.println("connected...yeey :)");
+  Serial.println("local ip");
+  Serial.println(WiFi.localIP());
  
   Serial.println("connected");
   display.print("connected");
@@ -159,7 +156,9 @@ void loop()
         int  wind_degree = root["wind"]["deg"];                     // get wind degree in °
  
         display.setCursor(0, 24);
+        Serial.print("Nhiệt độ:");
         display.printf("Temperature: %5.2f C\r\n", temp);
+        Serial.println(temp);
         display.printf("Humidity   : %d %%\r\n", humidity);
         display.printf("Pressure   : %.3fbar\r\n", pressure);
         display.printf("Wind speed : %.1f m/s\r\n", wind_speed);
