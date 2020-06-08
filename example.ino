@@ -27,16 +27,16 @@
 Adafruit_SSD1306 display(OLED_RESET);
  
 // set Wi-Fi SSID and password
-const char *ssid     = "DJAWEB";
-const char *password = "ABCdef0123456789uvwXYZ@*123*@";
+const char *ssid     = "TP-LINK_52ED32";
+const char *password = "44448888";
  
 WiFiUDP ntpUDP;
 // 'time.nist.gov' is used (default server) with +1 hour offset (3600 seconds) 60 seconds (60000 milliseconds) update interval
 NTPClient timeClient(ntpUDP, "time.nist.gov", 3600, 60000);
  
 // set location and API key
-String Location = "London,uk";
-String API_Key  = "1041444a18cfb8448343254a45721b1d";
+String Location = "Hanoi";
+String API_Key  = "90366e0d41ba5f0fcac7621190876245";
  
 void setup(void)
 {
