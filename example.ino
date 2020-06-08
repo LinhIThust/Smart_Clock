@@ -88,6 +88,7 @@ void loop()
   {
     timeClient.update();
     unsigned long unix_epoch = timeClient.getEpochTime();   // get UNIX Epoch time
+    unix_epoch+=21600;
  
     second_ = second(unix_epoch);        // get seconds from the UNIX Epoch time
     if (last_second != second_)          // update time & date every 1 second
@@ -114,11 +115,15 @@ void loop()
  
       display.setCursor(0, 0);
       display.print("Time:");
+      Serial.println("TIME:");
       display.setCursor(60, 0);
       display.print(Time);        // display time (format: hh:mm:ss)
+       Serial.println(Time);
       display.setCursor(0, 11);
+      Serial.println("DATE:");
       display_wday();
       display.print(Date);        // display date (format: dd-mm-yyyy)
+      Serial.println(Date);
       display.display();
  
       last_second = second_;
