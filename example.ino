@@ -1,4 +1,10 @@
 // ESP8266 WiFi main library
+#define FIREBASE_HOST "smarthome-3d414.firebaseio.com"
+#define FIREBASE_AUTH "UTj35IeDcp9hhfoamk7ogQAB1GtP1xNRs2CFD5ya"
+
+#include "FirebaseESP8266.h"
+FirebaseData firebaseData;
+FirebaseJson json;
 #include <ESP8266WiFi.h>
  
 // Libraries for internet time
@@ -24,8 +30,9 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "time.nist.gov", 3600, 60000);
  
 // set location and API key
-String Location = "Hanoi";
+String Location = "Hanoi2";
 String API_Key  = "90366e0d41ba5f0fcac7621190876245";
+int UTC;
 char Time[] = "  :  :  ";
 char Date[] = "  -  -20  ";
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
@@ -34,11 +41,13 @@ void updateWearher();
 void configWifi();
 void updateTime();
 void configOled();
+void getDataConfig();
  
 void setup(void)
 {
   Serial.begin(9600);
   delay(1000);
+  getDataConfig();
   configOled();
   configWifi();
   timeClient.begin();
@@ -106,7 +115,7 @@ void configWifi(){
 void updateTime(){
     timeClient.update();
     unsigned long unix_epoch = timeClient.getEpochTime();   // get UNIX Epoch time
-    unix_epoch+=21600;
+    unix_epoch+=(UTC-1)*3600;
  
     second_ = second(unix_epoch);        // get seconds from the UNIX Epoch time
     if (last_second != second_)          // update time & date every 1 second
@@ -153,7 +162,12 @@ void updateWeather(){
     {
       HTTPClient http;  // declare an object of class HTTPClient
       // specify request destination
-      http.begin("http://api.openweathermap.org/data/2.5/weather?q=" + Location + "&APPID=" + API_Key);  // !!
+      //firebase();
+      Serial.println(Location);
+     
+      String request = "http://api.openweathermap.org/data/2.5/weather?q=" + Location + "&APPID=" + API_Key;
+      Serial.println(request);
+      http.begin(request);  // !!
       int httpCode = http.GET();  // send the request
  
       if (httpCode > 0)  // check the returning code
@@ -185,5 +199,38 @@ void updateWeather(){
  
       last_minute = minute_;
     }
-  
 }
+
+void getDataConfig(){
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.reconnectWiFi(true);
+  //Set database read timeout to 1 minute (max 15 minutes)
+  Firebase.setReadTimeout(firebaseData, 1000 * 60);
+  //tiny, small, medium, large and unlimited.
+  //Size and its write timeout e.g. tiny (1s), small (10s), medium (30s) and large (60s).
+  Firebase.setwriteSizeLimit(firebaseData, "tiny");
+  String path = "/Config";
+  Serial.println("Read status...");
+  if (Firebase.getString(firebaseData, path + "/Location")){
+      Serial.print("VALUE: ");
+      Serial.println(firebaseData.stringData());
+      Location=firebaseData.stringData();
+      Serial.println("------------------------------------");
+       Serial.println();
+  }
+  if (Firebase.getString(firebaseData, path + "/API_KEY")){
+      Serial.print("VALUE: ");
+      Serial.println(firebaseData.stringData());
+      API_Key=firebaseData.stringData();
+      Serial.println("------------------------------------");
+       Serial.println();
+  }
+  if (Firebase.getString(firebaseData, path + "/UTC")){
+      Serial.print("VALUE: ");
+      Serial.println(firebaseData.stringData());
+      UTC=firebaseData.stringData().toInt();
+      Serial.println("------------------------------------");
+      Serial.println();
+  }
+
+ }
