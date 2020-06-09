@@ -28,21 +28,31 @@ SSD1306Wire display(0x3c, 4, 5,GEOMETRY_128_32);  // ADDRESS, SDA, SCL
 WiFiUDP ntpUDP;
 // 'time.nist.gov' is used (default server) with +1 hour offset (3600 seconds) 60 seconds (60000 milliseconds) update interval
 NTPClient timeClient(ntpUDP, "time.nist.gov", 3600, 60000);
- 
+
+#define BTN_CONTRAST 14
+#define BTN_MODE 12
 // set location and API key
 String Location = "Hanoi2";
 String API_Key  = "90366e0d41ba5f0fcac7621190876245";
 int UTC;
 char Time[] = "  :  :  ";
 char Date[] = "  -  -20  ";
+String currentTemp="";
+String currentHumidity="";
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
 
+int countMode =0;
+int countBri =0;
+
 void showOled();
+void showTime(String time,String date);
+void showWeather(String temp,String humidity);
 void updateWearher();
 void configWifi();
 void updateTime();
 void configOled();
 void getDataConfig();
+void systemDisplay();
  
 void setup(void)
 {
@@ -65,7 +75,24 @@ void loop()
   {
     updateTime();
     updateWeather();
+    systemDisplay();
     delay(200);
+  }
+}
+
+void systemDisplay(){
+  int m = digitalRead(BTN_MODE);
+  int b = digitalRead(BTN_CONTRAST);
+  
+  if(m ==0){
+     showWeather(currentTemp,currentHumidity);
+  }else{
+    showTime(Time,Date);
+  }
+  if(b ==0){
+     countBri++;
+     if(countBri >255) countBri =0;
+     display.setBrightness(countBri);
   }
 }
 
@@ -74,6 +101,19 @@ void showOled(String s){
   display.drawString(0, 10, s);
   display.display();
 
+}
+void showTime(String time,String date){
+  display.clear();
+  display.drawString(10, 15, "   "+time);
+  display.drawString(10, 0, date);
+  display.display();
+}
+
+void showWeather(String temp,String humidity){
+  display.clear();
+  display.drawString(0, 15, "Temp:"+temp);
+  display.drawString(0, 0, "Humidity:"+humidity);
+  display.display();
 }
 void display_wday()
 {
@@ -96,9 +136,10 @@ void configOled(){
   showOled("Hello");
 }
 
+
+
 void configWifi(){
   WiFiManager wifiManager;
-  //reset settings - for testing
   wifiManager.autoConnect("My ESP");
   Serial.println(WiFi.SSID());
   Serial.println(WiFi.psk());
@@ -137,11 +178,7 @@ void updateTime(){
       Date[1] = day_    % 10 + '0';
       Date[0] = day_    / 10 + '0';
  
-      // display.setCursor(0, 0);
-      // display.print("Time:");
        Serial.println("TIME:");
-      // display.setCursor(60, 0);
-      // display.print(Time);        // display time (format: hh:mm:ss)
        Serial.println(Time);
       // display.setCursor(0, 11);
        Serial.println("DATE:");
@@ -149,7 +186,7 @@ void updateTime(){
       // display.print(Date);        // display date (format: dd-mm-yyyy)
        Serial.println(Date);
       // display.display();
-      showOled(Time);
+      //showTime(Time,Date);
  
       last_second = second_;
     } 
@@ -181,17 +218,13 @@ void updateWeather(){
         }
         float temp = (float)(root["main"]["temp"]) - 273.15;        // get temperature in °C
         int   humidity = root["main"]["humidity"];                  // get humidity in %
-        // display.setCursor(0, 24);
          Serial.print("Nhiệt độ:");
-        // display.printf("Temperature: %5.2f C\r\n", temp);
          Serial.println(temp);
          Serial.print("Độ ẩm:");
-        // display.printf("Humidity   : %d %%\r\n", humidity);
          Serial.println(humidity);
-        // display.drawRect(109, 24, 3, 3, WHITE);     // put degree symbol ( ° )
-        // display.drawRect(97, 56, 3, 3, WHITE);
-        // display.display();
-        showOled("T:"+String(temp));
+        currentTemp = String(temp);
+        currentHumidity = String(humidity);
+        //showWeather(currentTemp,currentHumidity);
       }
  
       http.end();   // close connection
