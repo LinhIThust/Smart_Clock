@@ -1,7 +1,6 @@
 // ESP8266 WiFi main library
-#define FIREBASE_HOST "smarthome-3d414.firebaseio.com"
-#define FIREBASE_AUTH "UTj35IeDcp9hhfoamk7ogQAB1GtP1xNRs2CFD5ya"
-
+#define FIREBASE_HOST "smart-clock-e87b8.firebaseio.com"
+#define FIREBASE_AUTH  "kbhTUdV2cw1UN7kPoONCmjpBd6yGJ6tt5dYwJDWA"
 #include "FirebaseESP8266.h"
 FirebaseData firebaseData;
 FirebaseJson json;
@@ -46,10 +45,10 @@ void getDataConfig();
 void setup(void)
 {
   Serial.begin(9600);
-  delay(1000);
-  getDataConfig();
+  delay(1000); 
   configOled();
   configWifi();
+  getDataConfig();
   timeClient.begin();
   
   delay(1000);
@@ -225,10 +224,10 @@ void getDataConfig(){
       Serial.println("------------------------------------");
        Serial.println();
   }
-  if (Firebase.getString(firebaseData, path + "/UTC")){
+  if (Firebase.getInt(firebaseData, path + "/UTC")){
       Serial.print("VALUE: ");
-      Serial.println(firebaseData.stringData());
-      UTC=firebaseData.stringData().toInt();
+      Serial.println(firebaseData.intData());
+      UTC=firebaseData.intData();
       Serial.println("------------------------------------");
       Serial.println();
   }
