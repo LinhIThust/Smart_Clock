@@ -31,6 +31,8 @@ NTPClient timeClient(ntpUDP, "time.nist.gov", 3600, 60000);
 
 #define BTN_CONTRAST 14
 #define BTN_MODE 12
+int countMode =0;
+int countBri =0;
 // set location and API key
 String Location = "Hanoi2";
 String API_Key  = "90366e0d41ba5f0fcac7621190876245";
@@ -41,8 +43,7 @@ String currentTemp="";
 String currentHumidity="";
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
 
-int countMode =0;
-int countBri =0;
+
 
 void showOled();
 void showTime(String time,String date);
@@ -81,19 +82,29 @@ void loop()
 }
 
 void systemDisplay(){
-  int m = digitalRead(BTN_MODE);
-  int b = digitalRead(BTN_CONTRAST);
-  
-  if(m ==0){
-     showWeather(currentTemp,currentHumidity);
-  }else{
-    showTime(Time,Date);
-  }
-  if(b ==0){
-     countBri++;
+  if(!digitalRead(BTN_MODE)){
+    countMode++;
+    while(!digitalRead(BTN_MODE));
+    if(countMode >2) countMode =0;
+  } 
+  if(!digitalRead(BTN_CONTRAST)){
+     countBri+=20;
+     while(!digitalRead(BTN_CONTRAST));
      if(countBri >255) countBri =0;
      display.setBrightness(countBri);
-  }
+  }  
+  switch(countMode){
+      case 0:
+        showTime(Time,Date);
+        break;
+      case 1:
+        showWeather(currentTemp,currentHumidity);
+        break;
+      case 2:
+        showOled("Du bao thoi tiet");
+        break;
+  }                                                                                                                                                                                                    
+  
 }
 
 void showOled(String s){
