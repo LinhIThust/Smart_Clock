@@ -18,11 +18,12 @@ FirebaseJson json;
  
 // Libraries for SSD1306 OLED display
 #include <Wire.h>              // include wire library (for I2C devices such as the SSD1306 display)
-#include <Adafruit_GFX.h>      // include Adafruit graphics library
-#include <Adafruit_SSD1306.h>  // include Adafruit SSD1306 OLED display driver
- 
-#define OLED_RESET   5     // define SSD1306 OLED reset at ESP8266 GPIO5 (NodeMCU D1)
-Adafruit_SSD1306 display(OLED_RESET);
+//#include <Adafruit_GFX.h>      // include Adafruit graphics library
+//#include <Adafruit_SSD1306.h>  // include Adafruit SSD1306 OLED display driver
+#include "SSD1306Wire.h"
+SSD1306Wire display(0x3c, 4, 5,GEOMETRY_128_32);  // ADDRESS, SDA, SCL
+// #define OLED_RESET   5     // define SSD1306 OLED reset at ESP8266 GPIO5 (NodeMCU D1)
+// Adafruit_SSD1306 display(OLED_RESET);
  
 WiFiUDP ntpUDP;
 // 'time.nist.gov' is used (default server) with +1 hour offset (3600 seconds) 60 seconds (60000 milliseconds) update interval
@@ -36,6 +37,7 @@ char Time[] = "  :  :  ";
 char Date[] = "  -  -20  ";
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
 
+void showOled();
 void updateWearher();
 void configWifi();
 void updateTime();
@@ -45,6 +47,7 @@ void getDataConfig();
 void setup(void)
 {
   Serial.begin(9600);
+
   delay(1000); 
   configOled();
   configWifi();
@@ -66,35 +69,31 @@ void loop()
   }
 }
 
+void showOled(String s){
+  display.clear();
+  display.drawString(0, 10, s);
+  display.display();
 
+}
 void display_wday()
 {
   switch(wday)
   {
-    case 1:  display.print("SUNDAY    "); break;
-    case 2:  display.print("MONDAY    "); break;
-    case 3:  display.print("TUESDAY   "); break;
-    case 4:  display.print("WEDNESDAY "); break;
-    case 5:  display.print("THURSDAY  "); break;
-    case 6:  display.print("FRIDAY    "); break;
-    default: display.print("SATURDAY  ");
+    case 1:  showOled("SUNDAY    "); break;
+    case 2:  showOled("MONDAY    "); break;
+    case 3:  showOled("TUESDAY   "); break;
+    case 4:  showOled("WEDNESDAY "); break;
+    case 5:  showOled("THURSDAY  "); break;
+    case 6:  showOled("FRIDAY    "); break;
+    default: showOled("SATURDAY  ");
   }
  
 }
 void configOled(){
  
-  Wire.begin(4, 0);           // set I2C pins [SDA = GPIO4 (D2), SCL = GPIO0 (D3)], default clock is 100kHz
- 
-  // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3D);  // initialize with the I2C addr 0x3D (for the 128x64)
-  // init done
- 
-  Wire.setClock(400000L);   // set I2C clock to 400kHz
- 
-  display.clearDisplay();   // clear the display buffer
-  display.setTextColor(WHITE, BLACK);
-  display.setTextSize(1);
-  display.display();  
+  display.init();
+  display.setFont(ArialMT_Plain_16);
+  showOled("Hello");
 }
 
 void configWifi(){
@@ -107,8 +106,7 @@ void configWifi(){
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
   Serial.println("connected");
-  display.print("connected");
-  display.display();
+  showOled("connected");
 }
 
 void updateTime(){
@@ -139,18 +137,19 @@ void updateTime(){
       Date[1] = day_    % 10 + '0';
       Date[0] = day_    / 10 + '0';
  
-      display.setCursor(0, 0);
-      display.print("Time:");
-      Serial.println("TIME:");
-      display.setCursor(60, 0);
-      display.print(Time);        // display time (format: hh:mm:ss)
-      Serial.println(Time);
-      display.setCursor(0, 11);
-      Serial.println("DATE:");
-      display_wday();
-      display.print(Date);        // display date (format: dd-mm-yyyy)
-      Serial.println(Date);
-      display.display();
+      // display.setCursor(0, 0);
+      // display.print("Time:");
+       Serial.println("TIME:");
+      // display.setCursor(60, 0);
+      // display.print(Time);        // display time (format: hh:mm:ss)
+       Serial.println(Time);
+      // display.setCursor(0, 11);
+       Serial.println("DATE:");
+      // display_wday();
+      // display.print(Date);        // display date (format: dd-mm-yyyy)
+       Serial.println(Date);
+      // display.display();
+      showOled(Time);
  
       last_second = second_;
     } 
@@ -182,16 +181,17 @@ void updateWeather(){
         }
         float temp = (float)(root["main"]["temp"]) - 273.15;        // get temperature in °C
         int   humidity = root["main"]["humidity"];                  // get humidity in %
-        display.setCursor(0, 24);
-        Serial.print("Nhiệt độ:");
-        display.printf("Temperature: %5.2f C\r\n", temp);
-        Serial.println(temp);
-        Serial.print("Độ ẩm:");
-        display.printf("Humidity   : %d %%\r\n", humidity);
-        Serial.println(humidity);
-        display.drawRect(109, 24, 3, 3, WHITE);     // put degree symbol ( ° )
-        display.drawRect(97, 56, 3, 3, WHITE);
-        display.display();
+        // display.setCursor(0, 24);
+         Serial.print("Nhiệt độ:");
+        // display.printf("Temperature: %5.2f C\r\n", temp);
+         Serial.println(temp);
+         Serial.print("Độ ẩm:");
+        // display.printf("Humidity   : %d %%\r\n", humidity);
+         Serial.println(humidity);
+        // display.drawRect(109, 24, 3, 3, WHITE);     // put degree symbol ( ° )
+        // display.drawRect(97, 56, 3, 3, WHITE);
+        // display.display();
+        showOled("T:"+String(temp));
       }
  
       http.end();   // close connection
