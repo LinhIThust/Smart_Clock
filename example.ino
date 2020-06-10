@@ -36,6 +36,9 @@ int countBri =0;
 // set location and API key
 String Location = "Hanoi2";
 String API_Key  = "90366e0d41ba5f0fcac7621190876245";
+String statusWeather ="";
+String lon = "";
+String lat = "";
 int UTC;
 char Time[] = "  :  :  ";
 char Date[] = "  -  -20  ";
@@ -107,6 +110,9 @@ void systemDisplay(){
   
 }
 
+
+
+     
 void showOled(String s){
   display.clear();
   display.drawString(0, 10, s);
@@ -122,8 +128,8 @@ void showTime(String time,String date){
 
 void showWeather(String temp,String humidity){
   display.clear();
-  display.drawString(0, 15, "Temp:"+temp);
-  display.drawString(0, 0, "Humidity:"+humidity);
+  display.drawString(0, 15, statusWeather+": "+temp +" ºC");
+  display.drawString(0, 0, "Humidity: "+humidity+" %");
   display.display();
 }
 void display_wday()
@@ -144,7 +150,7 @@ void configOled(){
  
   display.init();
   display.setFont(ArialMT_Plain_16);
-  showOled("Hello");
+  showOled("Duong Tran IT");
 }
 
 
@@ -157,7 +163,7 @@ void configWifi(){
   Serial.println("connected...yeey :)");
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
-  Serial.println("connected");
+  Serial.println("Connected");
   showOled("connected");
 }
 
@@ -212,6 +218,7 @@ void updateWeather(){
       Serial.println(Location);
      
       String request = "http://api.openweathermap.org/data/2.5/weather?q=" + Location + "&APPID=" + API_Key;
+      
       Serial.println(request);
       http.begin(request);  // !!
       int httpCode = http.GET();  // send the request
@@ -222,6 +229,7 @@ void updateWeather(){
         DynamicJsonBuffer jsonBuffer(512);
         // Parse JSON object
         JsonObject& root = jsonBuffer.parseObject(payload);
+        JsonArray& weathers = root["weather"];
         if (!root.success())
         {
           Serial.println(F("Parsing failed!"));
@@ -229,15 +237,58 @@ void updateWeather(){
         }
         float temp = (float)(root["main"]["temp"]) - 273.15;        // get temperature in °C
         int   humidity = root["main"]["humidity"];                  // get humidity in %
+        lon = (float)(root["coord"]["lon"]);
+        lat = (float)(root["coord"]["lat"]);
+        
+        Serial.println("LL:"+String(lon)+String(lat));
+        for (auto weather : weathers) {
+           const char* value = weather["main"];
+           Serial.print("thoi tiet:");
+           
+           Serial.println(value);
+           statusWeather =value;
+        }
+        
          Serial.print("Nhiệt độ:");
          Serial.println(temp);
          Serial.print("Độ ẩm:");
          Serial.println(humidity);
+  
         currentTemp = String(temp);
         currentHumidity = String(humidity);
         //showWeather(currentTemp,currentHumidity);
       }
- 
+      String request2 = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&exclude=hourly,minutely"+ "&APPID=" + API_Key;
+      http.begin(request2);  // !!
+      int httpCode2 = http.GET();  // send the request
+      if (httpCode2 > 0)  // check the returning code
+      {
+        String payload = http.getString();   // get the request response payload
+        DynamicJsonBuffer jsonBuffer(512);
+        // Parse JSON object
+        JsonObject& root = jsonBuffer.parseObject(payload);
+        JsonArray& dailys = root["daily"];
+        
+        for (auto daily : dailys) {
+           const char* value = daily["temp"]["day"];
+           Serial.print("ngay tiep theo:");
+           Serial.println(value);
+           JsonArray& weathers = daily["weather"];
+           for (auto weather : weathers) {
+             const char* value = weather["main"];
+             Serial.print("thoi tiet:");
+             Serial.println(value);
+          }
+//           statusWeather =value;
+        }
+        if (!root.success())
+        {
+          Serial.println(F("Parsing failed!"));
+          return;
+        } 
+        String zone = root["timezone"];
+        Serial.println(zone);
+      }
       http.end();   // close connection
  
       last_minute = minute_;
