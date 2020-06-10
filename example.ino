@@ -42,6 +42,7 @@ int UTC;
 char Time[] = "  :  :  ";
 char Date[] = "  -  -20  ";
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
+unsigned long unix_epoch;
 
 void getDataConfig();
 void updateTime();
@@ -53,6 +54,7 @@ void showOled();
 void showTime(String time,String date);
 void showWeather(String temp,String humidity);
 void updateWearher();
+void parseTime(unsigned long unix_epoch);
 
 
 //----------------------------------------------------
@@ -128,13 +130,21 @@ void showWeather(String temp,String humidity){
   display.display();
 }
 void showWeatherForecast(){
+  display.clear();
+  display.drawString(0, 0, "Weather Forecast");
+  display.display();
+  delay(1000);
   for(unsigned char i =0;i<8;i++){
+     unix_epoch+=86400; // display date
+     parseTime(unix_epoch);
      display.clear();
      display.drawString(0, 15,dailyWeather[i] );
-     display.drawString(0, 0, "Weather Forecast");
+     display.drawString(10, 0, Date);
      display.display();
-     delay(500);
+     delay(1000);
   }
+  countMode=0;
+  
 }
 void display_wday()
 {
@@ -167,12 +177,17 @@ void configWifi(){
 
 void updateTime(){
     timeClient.update();
-    unsigned long unix_epoch = timeClient.getEpochTime();   // get UNIX Epoch time
+    unix_epoch = timeClient.getEpochTime();   // get UNIX Epoch time
     unix_epoch+=(UTC-1)*3600;
- 
     second_ = second(unix_epoch);        // get seconds from the UNIX Epoch time
-    if (last_second != second_)          // update time & date every 1 second
-    {
+    if (last_second != second_)  {        // update time & date every 1 second
+      parseTime(unix_epoch);
+    } 
+  
+ }
+ void parseTime(unsigned long unix_epoch){
+   
+      second_ = second(unix_epoch);  
       minute_ = minute(unix_epoch);      // get minutes (0 - 59)
       hour_   = hour(unix_epoch);        // get hours   (0 - 23)
       wday    = weekday(unix_epoch);     // get minutes (1 - 7 with Sunday is day 1)
@@ -193,7 +208,9 @@ void updateTime(){
       Date[1] = day_    % 10 + '0';
       Date[0] = day_    / 10 + '0'; 
       last_second = second_;
-    } 
+    
+  
+  
   
  }
 
@@ -254,8 +271,9 @@ void updateWeather(){
            for (auto weather : weathers) {
               String v = weather["main"];
               dailyWeather[countDay] = v;
-              dailyWeather[countDay]+= ",Temp: ";
+              dailyWeather[countDay]+= ",T: ";
               dailyWeather[countDay] +=String(temp) ;
+              dailyWeather[countDay] +=" ºC" ;
           }
           countDay++;
         }
