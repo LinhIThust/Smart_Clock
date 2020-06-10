@@ -44,6 +44,7 @@ char Time[] = "  :  :  ";
 char Date[] = "  -  -20  ";
 String currentTemp="";
 String currentHumidity="";
+String dailyWeather[10];
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
 
 
@@ -264,6 +265,7 @@ void updateWeather(){
       if (httpCode2 > 0)  // check the returning code
       {
         String payload = http.getString();   // get the request response payload
+        int countDay=0;
         DynamicJsonBuffer jsonBuffer(512);
         // Parse JSON object
         JsonObject& root = jsonBuffer.parseObject(payload);
@@ -275,11 +277,11 @@ void updateWeather(){
            Serial.println(value);
            JsonArray& weathers = daily["weather"];
            for (auto weather : weathers) {
-             const char* value = weather["main"];
-             Serial.print("thoi tiet:");
-             Serial.println(value);
+              String v = weather["main"];
+              dailyWeather[countDay] = v;
+              Serial.println(dailyWeather[countDay]);
           }
-//           statusWeather =value;
+          countDay++;
         }
         if (!root.success())
         {
