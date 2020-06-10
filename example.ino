@@ -79,6 +79,8 @@ void loop()
     updateWeather();
     systemDisplay();
     delay(200);
+  }else{
+    showOled("Wifi is disconnected!");
   }
 }
 
@@ -91,7 +93,7 @@ void systemDisplay(){
     if(countMode >2) countMode =0;
   } 
   if(!digitalRead(BTN_CONTRAST)){
-     countBri+=20;
+     countBri+=50;
      while(!digitalRead(BTN_CONTRAST));
      if(countBri >255) countBri =0;
      display.setBrightness(countBri);
@@ -165,6 +167,7 @@ void configOled(){
   display.init();
   display.setFont(ArialMT_Plain_16);
   showOled("Duong Tran IT");
+  delay(1000);
 }
 
 
@@ -172,7 +175,7 @@ void configOled(){
 void configWifi(){
   WiFiManager wifiManager;
   wifiManager.autoConnect("My ESP");
-  showOled("connected");
+  showOled("  ~~Ready~~");
 }
 
 void updateTime(){
