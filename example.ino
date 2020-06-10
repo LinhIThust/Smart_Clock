@@ -58,6 +58,7 @@ void updateTime();
 void configOled();
 void getDataConfig();
 void systemDisplay();
+void showWeatherForecast();
  
 void setup(void)
 {
@@ -105,7 +106,7 @@ void systemDisplay(){
         showWeather(currentTemp,currentHumidity);
         break;
       case 2:
-        showOled("Du bao thoi tiet");
+        showWeatherForecast();
         break;
   }                                                                                                                                                                                                    
   
@@ -132,6 +133,15 @@ void showWeather(String temp,String humidity){
   display.drawString(0, 15, statusWeather+": "+temp +" ºC");
   display.drawString(0, 0, "Humidity: "+humidity+" %");
   display.display();
+}
+void showWeatherForecast(){
+  for(unsigned char i =0;i<8;i++){
+     display.clear();
+     display.drawString(0, 15,dailyWeather[i] );
+     display.drawString(0, 0, "Weather Forecast");
+     display.display();
+     delay(500);
+  }
 }
 void display_wday()
 {
@@ -272,13 +282,15 @@ void updateWeather(){
         JsonArray& dailys = root["daily"];
         
         for (auto daily : dailys) {
-           const char* value = daily["temp"]["day"];
+           float temp = (float)(daily["temp"]["day"]) - 273.15;   
            Serial.print("ngay tiep theo:");
-           Serial.println(value);
+           Serial.println(String(temp));
            JsonArray& weathers = daily["weather"];
            for (auto weather : weathers) {
               String v = weather["main"];
               dailyWeather[countDay] = v;
+              dailyWeather[countDay]+= ",Temp: ";
+              dailyWeather[countDay] +=String(temp) ;
               Serial.println(dailyWeather[countDay]);
           }
           countDay++;
