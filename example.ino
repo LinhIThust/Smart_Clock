@@ -5,26 +5,19 @@
 FirebaseData firebaseData;
 FirebaseJson json;
 #include <ESP8266WiFi.h>
- 
 // Libraries for internet time
 #include <WiFiUdp.h>
 #include <NTPClient.h>          // include NTPClient library
 #include <TimeLib.h>            // include Arduino time library
 #include <WiFiManager.h>    
- 
 // Libraries for internet weather
 #include <ESP8266HTTPClient.h>  // http web access library
 #include <ArduinoJson.h>        // JSON decoding library
- 
 // Libraries for SSD1306 OLED display
 #include <Wire.h>              // include wire library (for I2C devices such as the SSD1306 display)
-//#include <Adafruit_GFX.h>      // include Adafruit graphics library
-//#include <Adafruit_SSD1306.h>  // include Adafruit SSD1306 OLED display driver
 #include "SSD1306Wire.h"
 SSD1306Wire display(0x3c, 4, 5,GEOMETRY_128_32);  // ADDRESS, SDA, SCL
-// #define OLED_RESET   5     // define SSD1306 OLED reset at ESP8266 GPIO5 (NodeMCU D1)
-// Adafruit_SSD1306 display(OLED_RESET);
- 
+
 WiFiUDP ntpUDP;
 // 'time.nist.gov' is used (default server) with +1 hour offset (3600 seconds) 60 seconds (60000 milliseconds) update interval
 NTPClient timeClient(ntpUDP, "time.nist.gov", 3600, 60000);
@@ -33,33 +26,36 @@ NTPClient timeClient(ntpUDP, "time.nist.gov", 3600, 60000);
 #define BTN_MODE 12
 int countMode =0;
 int countBri =0;
-// set location and API key
+
+//weather
 String Location = "Hanoi2";
 String API_Key  = "90366e0d41ba5f0fcac7621190876245";
 String statusWeather ="";
 String lon = "";
 String lat = "";
-int UTC;
-char Time[] = "  :  :  ";
-char Date[] = "  -  -20  ";
 String currentTemp="";
 String currentHumidity="";
 String dailyWeather[10];
+
+//time
+int UTC;
+char Time[] = "  :  :  ";
+char Date[] = "  -  -20  ";
 byte last_second, last_minute, second_, minute_, hour_, wday, day_, month_, year_;
 
-
-
+void getDataConfig();
+void updateTime();
+void configWifi();
+void configOled();
+void systemDisplay();
+void showWeatherForecast();
 void showOled();
 void showTime(String time,String date);
 void showWeather(String temp,String humidity);
 void updateWearher();
-void configWifi();
-void updateTime();
-void configOled();
-void getDataConfig();
-void systemDisplay();
-void showWeatherForecast();
- 
+
+
+//----------------------------------------------------
 void setup(void)
 {
   Serial.begin(9600);
@@ -73,8 +69,6 @@ void setup(void)
   delay(1000);
 }
  
-
- 
 void loop()
 {
   if (WiFi.status() == WL_CONNECTED)  // check WiFi connection status
@@ -85,6 +79,8 @@ void loop()
     delay(200);
   }
 }
+
+//--------------------------------------------------------------
 
 void systemDisplay(){
   if(!digitalRead(BTN_MODE)){
@@ -111,9 +107,6 @@ void systemDisplay(){
   }                                                                                                                                                                                                    
   
 }
-
-
-
      
 void showOled(String s){
   display.clear();
@@ -169,12 +162,6 @@ void configOled(){
 void configWifi(){
   WiFiManager wifiManager;
   wifiManager.autoConnect("My ESP");
-  Serial.println(WiFi.SSID());
-  Serial.println(WiFi.psk());
-  Serial.println("connected...yeey :)");
-  Serial.println("local ip");
-  Serial.println(WiFi.localIP());
-  Serial.println("Connected");
   showOled("connected");
 }
 
@@ -204,33 +191,21 @@ void updateTime(){
       Date[4] = month_  % 10 + '0';
       Date[3] = month_  / 10 + '0';
       Date[1] = day_    % 10 + '0';
-      Date[0] = day_    / 10 + '0';
- 
-       Serial.println("TIME:");
-       Serial.println(Time);
-      // display.setCursor(0, 11);
-       Serial.println("DATE:");
-      // display_wday();
-      // display.print(Date);        // display date (format: dd-mm-yyyy)
-       Serial.println(Date);
-      // display.display();
-      //showTime(Time,Date);
- 
+      Date[0] = day_    / 10 + '0'; 
       last_second = second_;
     } 
   
  }
+
 void updateWeather(){
   if (last_minute != minute_)       // update weather every 1 minute
     {
       HTTPClient http;  // declare an object of class HTTPClient
       // specify request destination
       //firebase();
-      Serial.println(Location);
      
       String request = "http://api.openweathermap.org/data/2.5/weather?q=" + Location + "&APPID=" + API_Key;
-      
-      Serial.println(request);
+    
       http.begin(request);  // !!
       int httpCode = http.GET();  // send the request
  
@@ -251,24 +226,16 @@ void updateWeather(){
         lon = (float)(root["coord"]["lon"]);
         lat = (float)(root["coord"]["lat"]);
         
-        Serial.println("LL:"+String(lon)+String(lat));
+   
         for (auto weather : weathers) {
            const char* value = weather["main"];
-           Serial.print("thoi tiet:");
-           
-           Serial.println(value);
+
            statusWeather =value;
         }
-        
-         Serial.print("Nhiệt độ:");
-         Serial.println(temp);
-         Serial.print("Độ ẩm:");
-         Serial.println(humidity);
-  
         currentTemp = String(temp);
         currentHumidity = String(humidity);
-        //showWeather(currentTemp,currentHumidity);
       }
+
       String request2 = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&exclude=hourly,minutely"+ "&APPID=" + API_Key;
       http.begin(request2);  // !!
       int httpCode2 = http.GET();  // send the request
@@ -283,15 +250,12 @@ void updateWeather(){
         
         for (auto daily : dailys) {
            float temp = (float)(daily["temp"]["day"]) - 273.15;   
-           Serial.print("ngay tiep theo:");
-           Serial.println(String(temp));
            JsonArray& weathers = daily["weather"];
            for (auto weather : weathers) {
               String v = weather["main"];
               dailyWeather[countDay] = v;
               dailyWeather[countDay]+= ",Temp: ";
               dailyWeather[countDay] +=String(temp) ;
-              Serial.println(dailyWeather[countDay]);
           }
           countDay++;
         }
@@ -301,7 +265,6 @@ void updateWeather(){
           return;
         } 
         String zone = root["timezone"];
-        Serial.println(zone);
       }
       http.end();   // close connection
  
@@ -318,27 +281,15 @@ void getDataConfig(){
   //Size and its write timeout e.g. tiny (1s), small (10s), medium (30s) and large (60s).
   Firebase.setwriteSizeLimit(firebaseData, "tiny");
   String path = "/Config";
-  Serial.println("Read status...");
   if (Firebase.getString(firebaseData, path + "/Location")){
-      Serial.print("VALUE: ");
-      Serial.println(firebaseData.stringData());
       Location=firebaseData.stringData();
-      Serial.println("------------------------------------");
-       Serial.println();
+
   }
   if (Firebase.getString(firebaseData, path + "/API_KEY")){
-      Serial.print("VALUE: ");
-      Serial.println(firebaseData.stringData());
       API_Key=firebaseData.stringData();
-      Serial.println("------------------------------------");
-       Serial.println();
   }
   if (Firebase.getInt(firebaseData, path + "/UTC")){
-      Serial.print("VALUE: ");
-      Serial.println(firebaseData.intData());
       UTC=firebaseData.intData();
-      Serial.println("------------------------------------");
-      Serial.println();
   }
 
  }
