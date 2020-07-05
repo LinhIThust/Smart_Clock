@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "812894633731",
+    "firebase_url": "https://smart-clock-e87b8.firebaseio.com",
+    "project_id": "smart-clock-e87b8",
+    "storage_bucket": "smart-clock-e87b8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:812894633731:android:dfdf1909c122ae554f7336",
+        "android_client_info": {
+          "package_name": "com.example.smartclock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "812894633731-ap2gavcrjqdi8bijpcp79pilv6l4ju99.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartclock",
+            "certificate_hash": "51534ba967909d40e2eda9a68842a1bf2ffe7d1e"
+          }
+        },
+        {
+          "client_id": "812894633731-b8ipqcsclo1hpm6akul7r5ljrb4a6u7j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbUnLx5lXCpgdlkz0HGB6fzMFPxK33r2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "812894633731-b8ipqcsclo1hpm6akul7r5ljrb4a6u7j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
